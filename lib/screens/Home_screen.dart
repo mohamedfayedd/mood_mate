@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'Camera Screen .dart'; // تأكد من استيراد الشاشة الجديدة
+import 'profile.dart'; // استيراد شاشة الملف الشخصي
+import 'Question screen.dart'; // استيراد شاشة الأسئلة
+import 'write feelings screen.dart'; // استيراد شاشة كتابة المشاعر
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -45,9 +48,17 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  CircleAvatar(
-                    radius: 16,
-                    backgroundImage: AssetImage("assets/images/profile.jpg"),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ProfileScreen()), // الانتقال إلى صفحة الملف الشخصي
+                      );
+                    },
+                    child: CircleAvatar(
+                      radius: 16,
+                      backgroundImage: AssetImage("assets/images/profile.jpg"),
+                    ),
                   ),
                 ],
               ),
@@ -99,7 +110,12 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => QuestionScreen()), // الانتقال إلى شاشة الأسئلة
+                                );
+                              },
                               icon: const Icon(
                                 Icons.edit,
                                 color: Colors.black,
@@ -119,7 +135,12 @@ class HomeScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton.icon(
-                              onPressed: () {},
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => WriteFeelingsScreen()), // الانتقال إلى شاشة كتابة المشاعر
+                                );
+                              },
                               icon: const Icon(
                                 Icons.text_fields,
                                 color: Colors.black,

@@ -1,8 +1,73 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 
-class CameraScreen extends StatelessWidget {
+class CameraScreen extends StatefulWidget {
+  @override
+  _CameraScreenState createState() => _CameraScreenState();
+}
+
+class _CameraScreenState extends State<CameraScreen> {
+  late CameraController _controller;
+  late List<CameraDescription> _cameras;
+  bool _isCameraInitialized = false;
+  String? _imagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    _cameras = await availableCameras();
+    _controller = CameraController(_cameras[0], ResolutionPreset.high);
+    await _controller.initialize();
+    setState(() {
+      _isCameraInitialized = true;
+    });
+  }
+
+  Future<void> _takePicture() async {
+    try {
+      final XFile image = await _controller.takePicture();
+      setState(() {
+        _imagePath = image.path;
+      });
+      print("تم التقاط الصورة: ${image.path}");
+    } catch (e) {
+      print("خطأ أثناء التقاط الصورة: $e");
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imagePath = pickedFile.path;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_isCameraInitialized) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('Take A Picture', style: TextStyle(color: Colors.black)),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: Colors.black, size: 28),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -25,29 +90,34 @@ class CameraScreen extends StatelessWidget {
               height: 485,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(25),
-                image: DecorationImage(
-                  image: AssetImage('assets/images/photo.jpg'),
-                  fit: BoxFit.cover,
-                ),
               ),
+              child: _imagePath != null
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(25),
+                child: Image.file(File(_imagePath!), fit: BoxFit.cover),
+              )
+                  : CameraPreview(_controller),
             ),
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/gallery.jpg'),
-                      fit: BoxFit.cover,
+                GestureDetector(
+                  onTap: _pickImageFromGallery,
+                  child: Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      image: DecorationImage(
+                        image: AssetImage('assets/images/gallery.jpg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: _takePicture,
                   child: Container(
                     width: 70,
                     height: 70,
@@ -72,8 +142,16 @@ class CameraScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('image-name1255.png'),
-                  Icon(Icons.delete, color: Colors.red),
+                  Text(_imagePath != null ? _imagePath!.split('/').last : 'image-name1255.png'),
+                  if (_imagePath != null)
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _imagePath = null;
+                        });
+                      },
+                      child: Icon(Icons.delete, color: Colors.red),
+                    ),
                 ],
               ),
             ),
@@ -99,5 +177,11 @@ class CameraScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }
